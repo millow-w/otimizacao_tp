@@ -11,9 +11,21 @@ idades = [6,7,8,9,10]
 # ===============================
 df = pd.read_excel(ARQUIVO_PLANILHA, index_col=0)
 
-# Corrigir índices
-df.index = [0 if x == "ESCOLA" else int(x) for x in df.index]
-df.columns = [0 if x == "ESCOLA" else int(x) for x in df.columns]
+# Forçamos a conversão de todos os índices para string primeiro para evitar erro de tipo
+df.index = df.index.map(str)
+df.columns = df.columns.map(str)
+
+# Criamos um mapeamento: o que for "31" ou "ESCOLA" vira 0, o resto vira int
+mapeamento = {str(i): i for i in range(1, 31)}
+mapeamento["31"] = 0
+mapeamento["ESCOLA"] = 0
+
+df.index = df.index.map(mapeamento)
+df.columns = df.columns.map(mapeamento)
+
+# Agora sim:
+todas_casas = list(range(1, 31)) # Casas de 1 a 30
+escola = 0
 
 for instancia in range(1, NUM_INSTANCIAS + 1):
 

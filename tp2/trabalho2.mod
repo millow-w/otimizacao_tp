@@ -4,7 +4,7 @@
 
 set H;                     # casas (1..nt)
 set Hbar;                  # H unido com escola (inclui 0)
-set A within {Hbar, Hbar}; # arcos (i,j)
+set A within {H, Hbar}; # arcos (i,j)
 set I;                     # idades
 
 # ----------------------------
@@ -30,7 +30,7 @@ var y{(i,j) in A} binary;                 # arco utilizado
 var theta >= 0;                           # maior distância
 var w{(i,j) in A, k in I} integer >= 0;   # fluxo crianças
 var x{(i,j) in A} integer >= 0;           # fluxo monitores
-var pi{i in H} >= 0;                      # distância até escola
+var pi{i in H} >= Si[i];                      # distância até escola
 
 # ----------------------------
 # FUNÇÃO OBJETIVO (f1)
@@ -54,7 +54,7 @@ subject to fluxo_monitores{i in H}:
 
 # (5) capacidade monitor
 subject to capacidade{(i,j) in A}:
-    sum{k in I} pk[k] * w[i,j,k] <= rho * x[i,j];
+    sum{k in I} pk[k] * w[i,j,k] - rho * x[i,j] <= 0;
 
 # (6) ativação por fluxo criança
 subject to ativacao1{(i,j) in A}:
@@ -81,7 +81,7 @@ subject to define_theta{i in H}:
     pi[i] <= theta;
 
 # (12) cálculo distância acumulada
-subject to distancia{(i,j) in A: i != 0}:
+subject to distancia{(i,j) in A: i != 0 and j != 0}:
     pi[j] - pi[i]
     + (Delta[j] - Si[i] + cij[i,j]) * y[i,j]
     + (Delta[j] - Si[i] - cij[j,i]) * y[j,i]
@@ -92,7 +92,7 @@ subject to inicio_rota{i in H}:
     sum{(j,i) in A} y[j,i] + z[i] >= 1;
 
 # (14) folha
-subject to folha{(j,i) in A}:
+subject to folha{(j,i) in A: i in H}:
     z[i] - M * (1 - y[j,i]) <= 0;
 
 end;

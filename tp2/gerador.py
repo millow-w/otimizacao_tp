@@ -6,18 +6,18 @@ def geradorDeInstancias():
     if 'Unnamed: 0' in matriz.columns:
         matriz = matriz.drop(columns=['Unnamed: 0'])
 
-    casasEscolhidas = random.sample(range(1,31), 25)
+    casasEscolhidas = random.sample(range(1,31), 15)
 
     # CONJUNTOS
     H = casasEscolhidas
-    escola = 0 # escola tá em i = 30 ou j = "ESCOLA"
+    escola = 0 
     Hbar = H + [escola]
     A = A = [(i, j) for i in H for j in Hbar if i != j]
     idades = list(range(6, 11))
 
     # PARÂMETROS
     alpha = 0
-    rho = 5 # quantidade de crianças que o monitor consegue supervisionar
+    rho = 5 
     q = {}
     total_criancas = 0
     for casa in casasEscolhidas:
@@ -47,16 +47,20 @@ def geradorDeInstancias():
         coluna_busca = "ESCOLA" if j == escola else j
         linha_busca = 30 if i == escola else i - 1
         c[i,j] = int(matriz.at[linha_busca, coluna_busca])
+    # for casa in H:
+    #     c[(0, casa)] = 99999.0
     d = {}
     for (i, j) in A:
         d[i,j] = round(random.uniform(0.01, 0.3), 2)
-    print("Delta: ", Deltai)
-    salvar_arquivo_dat("problema_1.dat", H, Hbar, A, idades, c, d, q, pk, rho, Si, Deltai, alpha, M)
+    # print("Delta: ", Deltai)
+    # print("A: ", A)
+    # print("c", c)
+    salvar_arquivo_dat("problema_2_casas_15.dat", H, Hbar, A, idades, c, d, q, pk, rho, Si, Deltai, alpha, M)
     print("Arquivo problema.dat gerado com sucesso!")
 
 def salvar_arquivo_dat(nome_arquivo, H, Hbar, A, idades, cij, dij, qki, pk, rho, Si, Delta, alpha, M):
     with open(nome_arquivo, 'w') as f:
-        f.write("data;\n\n") # Início da seção de dados para o GLPK
+        f.write("data;\n\n") 
 
         # --- CONJUNTOS ---
         f.write(f"set H := {' '.join(map(str, sorted(H)))};\n\n")
@@ -65,7 +69,7 @@ def salvar_arquivo_dat(nome_arquivo, H, Hbar, A, idades, cij, dij, qki, pk, rho,
         
         f.write("set A := \n")
         for i, j in A:
-            f.write(f"  ({i},{j})\n") # GLPK prefere (i,j) para conjuntos de pares
+            f.write(f"  ({i},{j})\n") 
         f.write(";\n\n")
 
         # --- PARÂMETROS ESCALARES ---
@@ -80,13 +84,15 @@ def salvar_arquivo_dat(nome_arquivo, H, Hbar, A, idades, cij, dij, qki, pk, rho,
         f.write(";\n\n")
 
         f.write("param Si := \n")
-        for i in sorted(H):
-            f.write(f"  [{i}] {Si[i]}\n")
+        for i in sorted(H): 
+            valor_si = Si.get(i) 
+            f.write(f"  [{i}] {valor_si}\n")
         f.write(";\n\n")
 
         f.write("param Delta := \n")
         for i in sorted(H):
-            f.write(f"  [{i}] {round(Delta[i], 2)}\n")
+            valor_delta = Delta.get(i)
+            f.write(f"  [{i}] {valor_delta}\n")
         f.write(";\n\n")
 
         # --- PARÂMETROS MATRICIAIS (cij e dij) ---
@@ -107,7 +113,7 @@ def salvar_arquivo_dat(nome_arquivo, H, Hbar, A, idades, cij, dij, qki, pk, rho,
                 f.write(f"  [{casa},{idade}] {qki[casa][idade]}\n")
         f.write(";\n\n")
         
-        f.write("end;\n") # OBRIGATÓRIO para o GLPK
+        f.write("end;\n")
 
 if __name__ == "__main__":
     geradorDeInstancias()
