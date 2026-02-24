@@ -1,7 +1,6 @@
 # ----------------------------
 # CONJUNTOS
 # ----------------------------
-
 set H;                     # casas (1..nt)
 set Hbar;                  # H unido com escola (inclui 0)
 set A within {H, Hbar}; # arcos (i,j)
@@ -10,7 +9,6 @@ set I;                     # idades
 # ----------------------------
 # PARÂMETROS
 # ----------------------------
-
 param dij{A};              # qualidade do arco
 param cij{A};              # distância do arco
 param qki{H,I} >= 0;       # nº crianças idade k no nó i
@@ -24,7 +22,6 @@ param M >= 0;
 # ----------------------------
 # VARIÁVEIS
 # ----------------------------
-
 var z{i in H} integer >= 0;               # monitores que começam em i
 var y{(i,j) in A} binary;                 # arco utilizado
 var theta >= 0;                           # maior distância
@@ -59,11 +56,9 @@ subject to capacidade{(i,j) in A}:
 # (6) ativação por fluxo criança
 subject to ativacao1{(i,j) in A}:
     y[i,j] - sum{k in I} w[i,j,k] <= 0;
-
 # (7) ativação por monitor
 subject to ativacao2{(i,j) in A}:
     y[i,j] - x[i,j] <= 0;
-
 # (8) big-M
 subject to bigM{(i,j) in A}:
     x[i,j] - M * y[i,j] <= 0;
@@ -75,7 +70,6 @@ subject to visita{i in H}:
 # (10) limite distância
 subject to limite_dist{i in H}:
     pi[i] <= Delta[i];
-
 # (11) definição theta
 subject to define_theta{i in H}:
     pi[i] <= theta;
