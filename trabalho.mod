@@ -1,74 +1,98 @@
-# --- CONJUNTOS ---
-set H; # Conjunto de casas
-set H_bar := H union {0}; # Casas + Escola (nó 0)
-set A within (H_bar cross H_bar); # Arestas/Caminhos
-set I; # Idades das crianças
+# ----------------------------
+# CONJUNTOS
+# ----------------------------
 
-# --- PARÂMETROS ---
-param d{A};         # Qualidade do caminho
-param q{H, I};      # Qtd de crianças de idade k na casa i
-param p{I};         # Nível de atenção por idade
-param rho;          # Capacidade do monitor (ex: 5.0)
-param S{H};         # Distância direta casa-escola
-param Delta{H};     # Distância máxima permitida
-param c{A};         # Distância entre i e j
-param alpha := 0; # Peso da segurança (critério desempate)
-param M := sum{i in H, k in I} q[i,k];    # Valor total de crianças
+set H;                     # casas (1..nt)
+set Hbar;                  # H unido com escola (inclui 0)
+set A within {H, Hbar}; # arcos (i,j)
+set I;                     # idades
 
-# --- VARIÁVEIS ---
-var z{H} integer, >= 0;          # Monitores que começam em i
-var y{A} binary;                 # Arco (i,j) é usado?
-var theta >= 0;                  # Caminho mais longo (para objetivo 2)
-var w{A, I} integer, >= 0;       # Crianças de idade k no arco (i,j)
-var x{A} integer, >= 0;          # Monitores no arco (i,j)
-var pi{H_bar} >= 0;              # Distância acumulada até a escola
+# ----------------------------
+# PARÂMETROS
+# ----------------------------
 
-# --- FUNÇÃO OBJETIVO (Exemplo: Minimizar Monitores) ---
-minimize obj1: sum{i in H} z[i] + alpha * sum{(i,j) in A} d[i,j] * y[i,j];
+param dij{A};              # qualidade do arco
+param cij{A};              # distância do arco
+param qki{H,I} >= 0;       # nº crianças idade k no nó i
+param pk{I} >= 0;          # nível de atenção por idade
+param rho >= 0;            # capacidade monitor
+param Si{H} >= 0;          # distância direta escola-i
+param Delta{H} >= 0;       # limite máximo caminhada
+param alpha >= 0;          
+param M >= 0;
 
-# --- RESTRIÇÕES ---
+# ----------------------------
+# VARIÁVEIS
+# ----------------------------
 
-# (3) Continuidade das crianças
-s.t. R3{i in H, k in I}:
-    -sum{(j,i) in A} w[j,i,k] + sum{(i,j) in A} w[i,j,k] = q[i,k];
+var z{i in H} integer >= 0;               # monitores que começam em i
+var y{(i,j) in A} binary;                 # arco utilizado
+var theta >= 0;                           # maior distância
+var w{(i,j) in A, k in I} integer >= 0;   # fluxo crianças
+var x{(i,j) in A} integer >= 0;           # fluxo monitores
+var pi{i in H} >= Si[i];                      # distância até escola
 
-# (4) Continuidade dos monitores
-s.t. R4{i in H}:
-    -sum{(j,i) in A} x[j,i] + sum{(i,j) in A} x[i,j] = z[i];
+# ----------------------------
+# FUNÇÃO OBJETIVO (f1)
+# ----------------------------
 
-# (5) Capacidade de supervisão
-s.t. R5{(i,j) in A}:
-    sum{k in I} p[k] * w[i,j,k] - rho * x[i,j] <= 0;
+minimize f1:
+    sum{i in H} z[i]
+  + alpha * sum{(i,j) in A} dij[i,j] * y[i,j];
 
-# (6, 7, 8) Ativação de arcos e segurança
-s.t. R6{(i,j) in A}: y[i,j] - sum{k in I} w[i,j,k] <= 0;
-s.t. R7{(i,j) in A}: y[i,j] - x[i,j] <= 0;
-s.t. R8{(i,j) in A}: x[i,j] - M * y[i,j] <= 0;
+# (3) conservação fluxo crianças
+subject to fluxo_criancas{i in H, k in I}:
+    - sum{(j,i) in A} w[j,i,k]
+    + sum{(i,j) in A} w[i,j,k]
+    = qki[i,k];
 
-# (9) Todos os nós visitados
-s.t. R9{i in H}: sum{(i,j) in A} y[i,j] = 1;
+# (4) conservação fluxo monitores
+subject to fluxo_monitores{i in H}:
+    - sum{(j,i) in A} x[j,i]
+    + sum{(i,j) in A} x[i,j]
+    = z[i];
 
-# (10, 11) Distâncias e maior trajeto
-  s.t. R10{i in H}: pi[i] <= Delta[i];
-  s.t. R11{i in H}: pi[i] <= theta;
+# (5) capacidade monitor
+subject to capacidade{(i,j) in A}:
+    sum{k in I} pk[k] * w[i,j,k] - rho * x[i,j] <= 0;
 
-# (12) Cálculo da distância (MTZ adaptado)
-# s.t. R12{(i,j) in A: i != 0}:
-   # pi[j] - pi[i] + (Delta[j] - S[i] + c[i,j]) * y[i,j] 
-   # + (Delta[j] - S[i] - c[j,i]) * y[j,i] <= Delta[j] - S[i];
+# (6) ativação por fluxo criança
+subject to ativacao1{(i,j) in A}:
+    y[i,j] - sum{k in I} w[i,j,k] <= 0;
 
-# (13) Garantia de visita ou início de monitor
-s.t. R13{i in H}:
+# (7) ativação por monitor
+subject to ativacao2{(i,j) in A}:
+    y[i,j] - x[i,j] <= 0;
+
+# (8) big-M
+subject to bigM{(i,j) in A}:
+    x[i,j] - M * y[i,j] <= 0;
+
+# (9) estrutura de árvore
+subject to visita{i in H}:
+    sum{(i,j) in A} y[i,j] = 1;
+
+# (10) limite distância
+subject to limite_dist{i in H}:
+    pi[i] <= Delta[i];
+
+# (11) definição theta
+subject to define_theta{i in H}:
+    pi[i] <= theta;
+
+# (12) cálculo distância acumulada
+subject to distancia{(i,j) in A: i != 0 and j != 0}:
+    pi[j] - pi[i]
+    + (Delta[j] - Si[i] + cij[i,j]) * y[i,j]
+    + (Delta[j] - Si[i] - cij[j,i]) * y[j,i]
+    <= Delta[j] - Si[i];
+
+# (13) início de rota
+subject to inicio_rota{i in H}:
     sum{(j,i) in A} y[j,i] + z[i] >= 1;
 
-# (14) Impede monitor novo se a casa já for visitada
-s.t. R14{i in H, (j,i) in A}: 
-    z[i] <= M * (1 - y[j,i]);
+# (14) folha
+subject to folha{(j,i) in A: i in H}:
+    z[i] - M * (1 - y[j,i]) <= 0;
 
-# Distãncia da escola
-s.t. Escola: pi[0] = 0;
-
-solve;
-
-display sum{i in H} z[i], theta;
 end;
