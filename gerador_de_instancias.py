@@ -6,7 +6,7 @@ def geradorDeInstancias():
     if 'Unnamed: 0' in matriz.columns:
         matriz = matriz.drop(columns=['Unnamed: 0'])
 
-    casasEscolhidas = random.sample(range(1,31), 20)
+    casasEscolhidas = random.sample(range(1,31), 15)
 
     # CONJUNTOS
     H = casasEscolhidas
@@ -47,15 +47,10 @@ def geradorDeInstancias():
         coluna_busca = "ESCOLA" if j == escola else j
         linha_busca = 30 if i == escola else i - 1
         c[i,j] = int(matriz.at[linha_busca, coluna_busca])
-    # for casa in H:
-    #     c[(0, casa)] = 99999.0
     d = {}
     for (i, j) in A:
         d[i,j] = round(random.uniform(0.01, 0.3), 2)
-    # print("Delta: ", Deltai)
-    # print("A: ", A)
-    # print("c", c)
-    salvar_arquivo_dat("problema_10_20.dat", H, Hbar, A, idades, c, d, q, pk, rho, Si, Deltai, alpha, M)
+    salvar_arquivo_dat("problema_3.dat", H, Hbar, A, idades, c, d, q, pk, rho, Si, Deltai, alpha, M)
     print("Arquivo problema.dat gerado com sucesso!")
 
 def salvar_arquivo_dat(nome_arquivo, H, Hbar, A, idades, cij, dij, qki, pk, rho, Si, Delta, alpha, M):

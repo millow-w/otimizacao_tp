@@ -24,12 +24,12 @@ var y{(i,j) in A} binary;                 # arco utilizado
 var theta >= 0;                           # maior distância
 var w{(i,j) in A, k in I} integer >= 0;   # fluxo crianças
 var x{(i,j) in A} integer >= 0;           # fluxo monitores
-var pi{i in H} >= Si[i];                      # distância até escola
+var pi{i in H} >= Si[i];                  # distância até escola
 
-# FUNÇÃO OBJETIVO (f1)
+# FUNÇÃO OBJETIVO (f2)
 
-minimize f1:
-    sum{i in H} z[i]
+minimize f2:
+    theta
   + alpha * sum{(i,j) in A} dij[i,j] * y[i,j];
 
 # (3) conservação fluxo crianças
